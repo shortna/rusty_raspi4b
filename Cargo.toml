@@ -1,0 +1,13 @@
+[package]
+name = "raspi4b"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "raspi4b"
+path = "src/main.rs"
+test = false
+doctest = false
+bench = false
+
+[dependencies]
