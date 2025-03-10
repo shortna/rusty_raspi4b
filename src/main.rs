@@ -5,13 +5,11 @@
 use core::arch::{asm, global_asm};
 use core::panic::PanicInfo;
 
-mod spi;
 mod aux;
 mod gpio;
 mod utils;
 use crate::aux::AUXPeripherals;
 use crate::aux::peripherals::*;
-use crate::spi::*;
 
 use crate::gpio::*;
 use crate::utils::bariers::*;
