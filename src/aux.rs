@@ -5,27 +5,74 @@ use core::option::Option;
 use core::ptr::read_volatile;
 
 #[repr(C)]
-struct AUXRegisters {
+pub struct AUXRegisters {
     irq: u32,    /* 0x00 AUX_IRQ Auxiliary Interrupt status */
     enable: u32, /* 0x04 AUX_ENABLES Auxiliary enables */
 }
 
 impl AUXRegisters {
     const BASE: usize = 0xfe215000;
-    pub const fn new() -> &'static mut AUXRegisters {
-        unsafe { &mut *(Self::BASE as *mut AUXRegisters) }
+    pub const fn new() -> *mut AUXRegisters {
+        Self::BASE as *mut AUXRegisters
+    }
+
+    pub fn enable_mini_uart(&mut self) {
+        register_volatile_or(u32_register_mut!(self.enable), BITu32!(0));
+    }
+
+    /* UNSUPPORTED */
+    pub fn enable_spi(&mut self) {
+        register_volatile_or(u32_register_mut!(self.enable), BITu32!(1));
+    }
+
+    /* UNSUPPORTED */
+    pub fn enable_spi2(&mut self) {
+        register_volatile_or(u32_register_mut!(self.enable), BITu32!(2));
+    }
+
+    /* UNSUPPORTED */
+    pub fn disable_mini_uart(&mut self) {
+        register_volatile_and(u32_register_mut!(self.enable), !BITu32!(0));
+    }
+
+    /* UNSUPPORTED */
+    pub fn disable_spi(&mut self) {
+        register_volatile_and(u32_register_mut!(self.enable), !BITu32!(1));
+    }
+
+    /* UNSUPPORTED */
+    pub fn disable_spi2(&mut self) {
+        register_volatile_and(u32_register_mut!(self.enable), !BITu32!(2));
+    }
+
+    pub fn irq_pending_mini_uart(&self) -> bool {
+        let irq = unsafe { read_volatile(u32_register!(self.irq)) };
+        (irq & BITu32!(0)) > 0
+    }
+
+    /* UNSUPPORTED */
+    pub fn irq_pending_spi(&self) -> bool {
+        let irq = unsafe { read_volatile(u32_register!(self.irq)) };
+        (irq & BITu32!(1)) > 0
+    }
+
+    /* UNSUPPORTED */
+    pub fn irq_pending_spi2(&self) -> bool {
+        let irq = unsafe { read_volatile(u32_register!(self.irq)) };
+        (irq & BITu32!(2)) > 0
     }
 }
 
+pub static mut AUX_PERIPHERALS: AUXPeripherals = AUXPeripherals::new();
 pub struct AUXPeripherals {
-    registers: &'static mut AUXRegisters,
+    registers: Option<*mut AUXRegisters>,
     mini_uart: Option<*mut MiniUart>,
 }
 
 impl AUXPeripherals {
-    pub const fn new() -> AUXPeripherals {
+    const fn new() -> AUXPeripherals {
         let periph: AUXPeripherals = AUXPeripherals {
-            registers: AUXRegisters::new(),
+            registers: Some(AUXRegisters::new()),
             mini_uart: Some(MiniUart::new()),
         };
         periph
@@ -36,50 +83,17 @@ impl AUXPeripherals {
         p.unwrap()
     }
 
-    pub fn enable_mini_uart(&mut self) {
-        register_volatile_or(u32_register_mut!(self.registers.enable), BITu32!(0));
+    pub fn take_aux_registers(&mut self) -> *mut AUXRegisters {
+        let p = self.registers.take();
+        p.unwrap()
     }
 
-    /* UNSUPPORTED */
-    pub fn enable_spi(&mut self) {
-        register_volatile_or(u32_register_mut!(self.registers.enable), BITu32!(1));
+    pub fn return_mini_uart(&mut self, uart: *mut MiniUart) {
+        self.mini_uart.replace(uart);
     }
 
-    /* UNSUPPORTED */
-    pub fn enable_spi2(&mut self) {
-        register_volatile_or(u32_register_mut!(self.registers.enable), BITu32!(2));
-    }
-
-    /* UNSUPPORTED */
-    pub fn disable_mini_uart(&mut self) {
-        register_volatile_and(u32_register_mut!(self.registers.enable), !BITu32!(0));
-    }
-
-    /* UNSUPPORTED */
-    pub fn disable_spi(&mut self) {
-        register_volatile_and(u32_register_mut!(self.registers.enable), !BITu32!(1));
-    }
-
-    /* UNSUPPORTED */
-    pub fn disable_spi2(&mut self) {
-        register_volatile_and(u32_register_mut!(self.registers.enable), !BITu32!(2));
-    }
-
-    pub fn irq_pending_mini_uart(&self) -> bool {
-        let irq = unsafe { read_volatile(u32_register!(self.registers.irq)) };
-        (irq & BITu32!(0)) > 0
-    }
-
-    /* UNSUPPORTED */
-    pub fn irq_pending_spi(&self) -> bool {
-        let irq = unsafe { read_volatile(u32_register!(self.registers.irq)) };
-        (irq & BITu32!(1)) > 0
-    }
-
-    /* UNSUPPORTED */
-    pub fn irq_pending_spi2(&self) -> bool {
-        let irq = unsafe { read_volatile(u32_register!(self.registers.irq)) };
-        (irq & BITu32!(2)) > 0
+    pub fn return_aux_registers(&mut self, aux_registers: *mut AUXRegisters) {
+        self.registers.replace(aux_registers);
     }
 }
 

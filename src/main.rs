@@ -8,7 +8,7 @@ use core::panic::PanicInfo;
 mod aux;
 mod gpio;
 mod utils;
-use crate::aux::AUXPeripherals;
+use crate::aux::AUX_PERIPHERALS;
 use crate::aux::peripherals::*;
 
 use crate::gpio::*;
@@ -25,7 +25,12 @@ fn panic(info: &PanicInfo) -> ! {
 
 global_asm!(include_str!("./init.S"));
 
-fn init_mini_uart(gpio: &mut GPIO, uart: &mut MiniUart) {
+fn init_mini_uart() {
+    let aux = &raw mut AUX_PERIPHERALS;
+    let uart = unsafe { &mut *(*aux).take_mini_uart() };
+    let gpio_ = &raw mut GPIO;
+    let gpio = unsafe { &mut *(*gpio_).take_gpio() };
+
     memory_write_barier();
     gpio.pin_function_set(GPIOPin::PIN14, GPIOFunction::ALT5);
     gpio.pin_function_set(GPIOPin::PIN15, GPIOFunction::ALT5);
@@ -50,6 +55,11 @@ fn init_mini_uart(gpio: &mut GPIO, uart: &mut MiniUart) {
 
     uart.transmitter_enable();
     uart.receiver_enable();
+
+    unsafe {
+        (*gpio_).return_gpio(gpio);
+        (*aux).return_mini_uart(uart);
+    }
 }
 
 #[inline]
@@ -66,14 +76,16 @@ fn print(uart: &mut MiniUart, str: &[u8]) {
 
 #[unsafe(no_mangle)]
 fn main() {
-    let mut aux = AUXPeripherals::new();
-
     memory_write_barier();
-    aux.enable_mini_uart();
+    let aux = &raw mut AUX_PERIPHERALS;
+    let registers = unsafe { &mut *(*aux).take_aux_registers() };
+    registers.enable_mini_uart();
+    unsafe {
+        (*aux).return_aux_registers(registers);
+    }
 
-    let mut gpio = GPIO::new();
-    let mini_uart = unsafe { &mut *aux.take_mini_uart() };
-    init_mini_uart(&mut gpio, mini_uart);
+    let aux = &raw mut AUX_PERIPHERALS;
+    let mini_uart = unsafe { &mut *(*aux).take_mini_uart() };
 
     let str = b"Hello, World!";
     for i in 0..13 {

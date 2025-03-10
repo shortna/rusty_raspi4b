@@ -59,105 +59,31 @@ pub enum GPIOPin {
     PIN53,
 }
 
+pub static mut GPIO: GPIO = GPIO::new();
 pub struct GPIO {
-    registers: &'static mut GPIORegisters,
+    registers: Option<*mut GPIORegisters>,
 }
 
 impl GPIO {
-    pub const fn new() -> GPIO {
-        let periph: GPIO = GPIO {
-            registers: GPIORegisters::new(),
+    const fn new() -> GPIO {
+        let periph = GPIO {
+            registers: Some(GPIORegisters::new()),
         };
         periph
     }
 
-    pub fn pin_function_set(&mut self, pin: GPIOPin, function: GPIOFunction) {
-        let pin_ = pin as u32;
-
-        let reg = match pin_ {
-            0..=9 => &mut self.registers.gpfsel0,
-            10..=19 => &mut self.registers.gpfsel1,
-            20..=29 => &mut self.registers.gpfsel2,
-            30..=39 => &mut self.registers.gpfsel3,
-            40..=49 => &mut self.registers.gpfsel4,
-            50..=53 => &mut self.registers.gpfsel5,
-            _ => unreachable!(),
-        };
-
-        const BITS_PER_PIN: u32 = 3;
-        const BITS_PER_REGISTER: u32 = 30;
-        let shift = (pin_ * BITS_PER_PIN) % BITS_PER_REGISTER;
-        register_volatile_and(reg, !(0x7u32 << shift));
-        register_volatile_or(reg, (function as u32) << shift);
+    pub fn take_gpio(&mut self) -> *mut GPIORegisters {
+        let p = self.registers.take();
+        p.unwrap()
     }
 
-    pub fn pin_function_get(&self, pin: GPIOPin) -> GPIOFunction {
-        let pin_ = pin as u32;
-
-        let reg = match pin_ {
-            0..=9 => &self.registers.gpfsel0,
-            10..=19 => &self.registers.gpfsel1,
-            20..=29 => &self.registers.gpfsel2,
-            30..=39 => &self.registers.gpfsel3,
-            40..=49 => &self.registers.gpfsel4,
-            50..=53 => &self.registers.gpfsel5,
-            _ => unreachable!(),
-        };
-
-        const BITS_PER_PIN: u32 = 3;
-        const BITS_PER_REGISTER: u32 = 30;
-        let pin_start_bit = (pin_ * BITS_PER_PIN) % BITS_PER_REGISTER;
-        let mask = ((pin_start_bit << BITS_PER_PIN) - 1) & !(pin_start_bit - 1);
-        let value = unsafe { read_volatile(reg) };
-        ((value & mask) >> pin_start_bit).try_into().unwrap()
-    }
-
-    pub fn pin_set(&mut self, pin: GPIOPin) {
-        let pin_ = pin as u32;
-
-        let reg = match pin_ {
-            0..=31 => &mut self.registers.gpset0,
-            32..=53 => &mut self.registers.gpset1,
-            _ => unreachable!(),
-        };
-
-        const BITS_PER_REGISTER: u32 = 32;
-        register_volatile_or(reg, 1u32 << (pin_ % BITS_PER_REGISTER));
-    }
-
-    pub fn pin_clear(&mut self, pin: GPIOPin) {
-        let pin_ = pin as u32;
-
-        let reg = match pin_ {
-            0..=31 => &mut self.registers.gpclr0,
-            32..=53 => &mut self.registers.gpclr1,
-            _ => unreachable!(),
-        };
-
-        const BITS_PER_REGISTER: u32 = 32;
-        register_volatile_or(reg, 1u32 << (pin_ % BITS_PER_REGISTER));
-    }
-
-    pub fn pin_level(&self, pin: GPIOPin) -> GPIOPinLevel {
-        let pin_ = pin as u32;
-
-        let reg = match pin_ {
-            0..=31 => &self.registers.gplev0,
-            32..=53 => &self.registers.gplev1,
-            _ => unreachable!(),
-        };
-
-        const BITS_PER_REGISTER: u32 = 32;
-        let value = unsafe { read_volatile(reg) } & (pin_ % BITS_PER_REGISTER);
-        match value > 0 {
-            true => GPIOPinLevel::High,
-            false => GPIOPinLevel::Low,
-        }
+    pub fn return_gpio(&mut self, gpio: *mut GPIORegisters) {
+        self.registers.replace(gpio);
     }
 }
 
 #[repr(C)]
-struct GPIORegisters {
+pub struct GPIORegisters {
     gpfsel0: u32,                 /* 0x00 GPFSEL0 GPIO Function Select 0 */
     gpfsel1: u32,                 /* 0x04 GPFSEL1 GPIO Function Select 1 */
     gpfsel2: u32,                 /* 0x08 GPFSEL2 GPIO Function Select 2 */
@@ -240,9 +166,91 @@ impl TryFrom<u32> for GPIOFunction {
 impl GPIORegisters {
     const BASE: usize = 0xfe200000;
 
-    pub const fn new() -> &'static mut GPIORegisters {
-        unsafe {
-            &mut *(Self::BASE as *mut GPIORegisters)
+    pub const fn new() -> *mut GPIORegisters {
+        Self::BASE as *mut GPIORegisters
+    }
+
+    pub fn pin_function_set(&mut self, pin: GPIOPin, function: GPIOFunction) {
+        let pin_ = pin as u32;
+
+        let reg = match pin_ {
+            0..=9 => &mut self.gpfsel0,
+            10..=19 => &mut self.gpfsel1,
+            20..=29 => &mut self.gpfsel2,
+            30..=39 => &mut self.gpfsel3,
+            40..=49 => &mut self.gpfsel4,
+            50..=53 => &mut self.gpfsel5,
+            _ => unreachable!(),
+        };
+
+        const BITS_PER_PIN: u32 = 3;
+        const BITS_PER_REGISTER: u32 = 30;
+        let shift = (pin_ * BITS_PER_PIN) % BITS_PER_REGISTER;
+        register_volatile_and(reg, !(0x7u32 << shift));
+        register_volatile_or(reg, (function as u32) << shift);
+    }
+
+    pub fn pin_function_get(&self, pin: GPIOPin) -> GPIOFunction {
+        let pin_ = pin as u32;
+
+        let reg = match pin_ {
+            0..=9 => &self.gpfsel0,
+            10..=19 => &self.gpfsel1,
+            20..=29 => &self.gpfsel2,
+            30..=39 => &self.gpfsel3,
+            40..=49 => &self.gpfsel4,
+            50..=53 => &self.gpfsel5,
+            _ => unreachable!(),
+        };
+
+        const BITS_PER_PIN: u32 = 3;
+        const BITS_PER_REGISTER: u32 = 30;
+        let pin_start_bit = (pin_ * BITS_PER_PIN) % BITS_PER_REGISTER;
+        let mask = ((pin_start_bit << BITS_PER_PIN) - 1) & !(pin_start_bit - 1);
+        let value = unsafe { read_volatile(reg) };
+        ((value & mask) >> pin_start_bit).try_into().unwrap()
+    }
+
+    pub fn pin_set(&mut self, pin: GPIOPin) {
+        let pin_ = pin as u32;
+
+        let reg = match pin_ {
+            0..=31 => &mut self.gpset0,
+            32..=53 => &mut self.gpset1,
+            _ => unreachable!(),
+        };
+
+        const BITS_PER_REGISTER: u32 = 32;
+        register_volatile_or(reg, 1u32 << (pin_ % BITS_PER_REGISTER));
+    }
+
+    pub fn pin_clear(&mut self, pin: GPIOPin) {
+        let pin_ = pin as u32;
+
+        let reg = match pin_ {
+            0..=31 => &mut self.gpclr0,
+            32..=53 => &mut self.gpclr1,
+            _ => unreachable!(),
+        };
+
+        const BITS_PER_REGISTER: u32 = 32;
+        register_volatile_or(reg, 1u32 << (pin_ % BITS_PER_REGISTER));
+    }
+
+    pub fn pin_level(&self, pin: GPIOPin) -> GPIOPinLevel {
+        let pin_ = pin as u32;
+
+        let reg = match pin_ {
+            0..=31 => &self.gplev0,
+            32..=53 => &self.gplev1,
+            _ => unreachable!(),
+        };
+
+        const BITS_PER_REGISTER: u32 = 32;
+        let value = unsafe { read_volatile(reg) } & (pin_ % BITS_PER_REGISTER);
+        match value > 0 {
+            true => GPIOPinLevel::High,
+            false => GPIOPinLevel::Low,
         }
     }
 }
