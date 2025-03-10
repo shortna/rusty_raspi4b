@@ -14,7 +14,7 @@ impl AUXRegisters {
     const BASE: usize = 0xfe215000;
     pub const fn new() -> &'static mut AUXRegisters {
         unsafe {
-            return &mut *(Self::BASE as *mut AUXRegisters);
+            &mut *(Self::BASE as *mut AUXRegisters)
         }
     }
 }
@@ -30,12 +30,12 @@ impl AUXPeripherals {
             registers: AUXRegisters::new(),
             mini_uart: Some(MiniUart::new()),
         };
-        return periph;
+        periph
     }
 
     pub fn take_mini_uart(&mut self) -> *mut MiniUart {
         let p = self.mini_uart.take();
-        return p.unwrap();
+        p.unwrap()
     }
 
     pub fn enable_mini_uart(&mut self) {
@@ -71,19 +71,19 @@ impl AUXPeripherals {
     pub fn irq_pending_mini_uart(&self) -> bool {
         let reg = &self.registers.irq as *const u32;
         let irq = unsafe { read_volatile(reg) };
-        return (irq & BITu32!(0)) > 0;
+        (irq & BITu32!(0)) > 0
     }
 
     pub fn irq_pending_spi(&self) -> bool {
         let reg = &self.registers.irq as *const u32;
         let irq = unsafe { read_volatile(reg) };
-        return (irq & BITu32!(1)) > 0;
+        (irq & BITu32!(1)) > 0
     }
 
     pub fn irq_pending_spi2(&self) -> bool {
         let reg = &self.registers.irq as *const u32;
         let irq = unsafe { read_volatile(reg) };
-        return (irq & BITu32!(2)) > 0;
+        (irq & BITu32!(2)) > 0
     }
 }
 
@@ -123,7 +123,7 @@ pub mod peripherals {
     impl MiniUart {
         const BASE: usize = 0xfe215040;
         pub const fn new() -> *mut Self {
-            return Self::BASE as *mut Self;
+            Self::BASE as *mut Self
         }
 
         pub fn transmit(&mut self, byte: u32) {
@@ -136,7 +136,7 @@ pub mod peripherals {
         pub fn receive(&self) -> u32 {
             let reg = &self.io as *const u32;
             unsafe {
-                return read_volatile(reg);
+                read_volatile(reg)
             }
         }
 
@@ -173,13 +173,13 @@ pub mod peripherals {
         pub fn interrupt_id(&self) -> u32 {
             let reg = &self.iir as *const u32;
             let value = unsafe { read_volatile(reg) };
-            return (value & (BITu32!(1) | BITu32!(2))) >> 1u32;
+            (value & (BITu32!(1) | BITu32!(2))) >> 1u32
         }
 
         pub fn interrupt_pending(&self) -> bool {
             unsafe {
                 let reg = &self.iir as *const u32;
-                return !((read_volatile(reg) & BITu32!(0)) > 0);
+                !((read_volatile(reg) & BITu32!(0)) > 0)
             }
         }
 
@@ -223,63 +223,63 @@ pub mod peripherals {
         pub fn receiver_symbol_avaliable(&self) -> bool {
             let reg = &self.stat as *const u32;
             unsafe {
-                return (read_volatile(reg) & BITu32!(0)) > 0;
+                (read_volatile(reg) & BITu32!(0)) > 0
             }
         }
 
         pub fn transmitter_space_avaliable(&self) -> bool {
             let reg = &self.stat as *const u32;
             unsafe {
-                return (read_volatile(reg) & BITu32!(1)) > 0;
+                (read_volatile(reg) & BITu32!(1)) > 0
             }
         }
 
         pub fn receiver_idle(&self) -> bool {
             let reg = &self.stat as *const u32;
             unsafe {
-                return (read_volatile(reg) & BITu32!(2)) > 0;
+                (read_volatile(reg) & BITu32!(2)) > 0
             }
         }
 
         pub fn tranmitter_idle(&self) -> bool {
             let reg = &self.stat as *const u32;
             unsafe {
-                return (read_volatile(reg) & BITu32!(3)) > 0;
+                (read_volatile(reg) & BITu32!(3)) > 0
             }
         }
 
         pub fn receive_overrun(&self) -> bool {
             let reg = &self.stat as *const u32;
             unsafe {
-                return (read_volatile(reg) & BITu32!(4)) > 0;
+                (read_volatile(reg) & BITu32!(4)) > 0
             }
         }
 
         pub fn transmit_fifo_empty(&self) -> bool {
             let reg = &self.stat as *const u32;
             unsafe {
-                return (read_volatile(reg) & BITu32!(8)) > 0;
+                (read_volatile(reg) & BITu32!(8)) > 0
             }
         }
 
         pub fn transmitter_done(&self) -> bool {
             let reg = &self.stat as *const u32;
             unsafe {
-                return (read_volatile(reg) & BITu32!(9)) > 0;
+                (read_volatile(reg) & BITu32!(9)) > 0
             }
         }
 
         pub fn receive_fifo_level(&self) -> u32 {
             let reg = &self.stat as *const u32;
             unsafe {
-                return (read_volatile(reg) >> 16u32) & 0x7;
+                (read_volatile(reg) >> 16u32) & 0x7
             }
         }
 
         pub fn transmit_fifo_level(&self) -> u32 {
             let reg = &self.stat as *const u32;
             unsafe {
-                return (read_volatile(reg) >> 24u32) & 0x7;
+                (read_volatile(reg) >> 24u32) & 0x7
             }
         }
 

@@ -67,7 +67,7 @@ impl GPIO {
         let periph: GPIO = GPIO {
             registers: GPIORegisters::new(),
         };
-        return periph;
+        periph
     }
 
     pub fn pin_function_set(&mut self, pin: GPIOPin, function: GPIOFunction) {
@@ -108,7 +108,7 @@ impl GPIO {
         let pin_start_bit = (pin_ * BITS_PER_PIN) % BITS_PER_REGISTER;
         let mask = ((pin_start_bit << BITS_PER_PIN) - 1) & !(pin_start_bit - 1);
         let value = unsafe { read_volatile(reg) };
-        return ((value & mask) >> pin_start_bit).try_into().unwrap();
+        ((value & mask) >> pin_start_bit).try_into().unwrap()
     }
 
     pub fn pin_set(&mut self, pin: GPIOPin) {
@@ -149,8 +149,8 @@ impl GPIO {
         const BITS_PER_REGISTER: u32 = 32;
         let value = unsafe { read_volatile(reg) } & (pin_ % BITS_PER_REGISTER);
         match value > 0 {
-            true => return GPIOPinLevel::High,
-            false => return GPIOPinLevel::Low,
+            true => GPIOPinLevel::High,
+            false => GPIOPinLevel::Low,
         }
     }
 }
@@ -221,14 +221,14 @@ impl TryFrom<u32> for GPIOFunction {
 
     fn try_from(value: u32) -> Result<Self, Self::Error> {
         match value {
-            0 => return Ok(GPIOFunction::INPUT),
-            1 => return Ok(GPIOFunction::OUTPUT),
-            4 => return Ok(GPIOFunction::ALT0),
-            5 => return Ok(GPIOFunction::ALT1),
-            6 => return Ok(GPIOFunction::ALT2),
-            7 => return Ok(GPIOFunction::ALT3),
-            3 => return Ok(GPIOFunction::ALT4),
-            2 => return Ok(GPIOFunction::ALT5),
+            0 => Ok(GPIOFunction::INPUT),
+            1 => Ok(GPIOFunction::OUTPUT),
+            4 => Ok(GPIOFunction::ALT0),
+            5 => Ok(GPIOFunction::ALT1),
+            6 => Ok(GPIOFunction::ALT2),
+            7 => Ok(GPIOFunction::ALT3),
+            3 => Ok(GPIOFunction::ALT4),
+            2 => Ok(GPIOFunction::ALT5),
             _ => Err(u32::MAX),
         }
     }
@@ -239,7 +239,7 @@ impl GPIORegisters {
 
     pub const fn new() -> &'static mut GPIORegisters {
         unsafe {
-            return &mut *(Self::BASE as *mut GPIORegisters);
+            &mut *(Self::BASE as *mut GPIORegisters)
         }
     }
 }

@@ -19,7 +19,7 @@ pub mod bits {
 
     macro_rules! BITu32 {
         ($b: expr) => {
-            1u32 << $b
+            (1u32 << $b)
         };
     }
     pub(crate) use BITu32;
