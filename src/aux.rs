@@ -41,26 +41,31 @@ impl AUXPeripherals {
         register_volatile_or(reg, BITu32!(0));
     }
 
+    /* UNSUPPORTED */
     pub fn enable_spi(&mut self) {
         let reg = &mut self.registers.enable as *mut u32;
         register_volatile_or(reg, BITu32!(1));
     }
 
+    /* UNSUPPORTED */
     pub fn enable_spi2(&mut self) {
         let reg = &mut self.registers.enable as *mut u32;
         register_volatile_or(reg, BITu32!(2));
     }
 
+    /* UNSUPPORTED */
     pub fn disable_mini_uart(&mut self) {
         let reg = &mut self.registers.enable as *mut u32;
         register_volatile_and(reg, !BITu32!(0));
     }
 
+    /* UNSUPPORTED */
     pub fn disable_spi(&mut self) {
         let reg = &mut self.registers.enable as *mut u32;
         register_volatile_and(reg, !BITu32!(1));
     }
 
+    /* UNSUPPORTED */
     pub fn disable_spi2(&mut self) {
         let reg = &mut self.registers.enable as *mut u32;
         register_volatile_and(reg, !BITu32!(2));
@@ -72,12 +77,14 @@ impl AUXPeripherals {
         (irq & BITu32!(0)) > 0
     }
 
+    /* UNSUPPORTED */
     pub fn irq_pending_spi(&self) -> bool {
         let reg = &self.registers.irq as *const u32;
         let irq = unsafe { read_volatile(reg) };
         (irq & BITu32!(1)) > 0
     }
 
+    /* UNSUPPORTED */
     pub fn irq_pending_spi2(&self) -> bool {
         let reg = &self.registers.irq as *const u32;
         let irq = unsafe { read_volatile(reg) };
@@ -90,18 +97,26 @@ pub mod peripherals {
     use core::ptr::{read_volatile, write_volatile};
 
     #[repr(C)]
+    pub struct SPI {}
+
+    #[repr(C)]
     pub struct MiniUart {
-        io: u32,      /* 0x40 AUX_MU_IO_REG Mini UART I/O Data */
-        ier: u32,     /* 0x44 AUX_MU_IER_REG Mini UART Interrupt Enable */
-        iir: u32,     /* 0x48 AUX_MU_IIR_REG Mini UART Interrupt Identify */
-        lcr: u32,     /* 0x4c AUX_MU_LCR_REG Mini UART Line Control */
-        mcr: u32,     /* 0x50 AUX_MU_MCR_REG Mini UART Modem Control */
-        lsr: u32,     /* 0x54 AUX_MU_LSR_REG Mini UART Line Status */
-        msr: u32,     /* 0x58 AUX_MU_MSR_REG Mini UART Modem Status */
+        io: u32,  /* 0x40 AUX_MU_IO_REG Mini UART I/O Data */
+        ier: u32, /* 0x44 AUX_MU_IER_REG Mini UART Interrupt Enable */
+        iir: u32, /* 0x48 AUX_MU_IIR_REG Mini UART Interrupt Identify */
+        /* UNSUPPORTED in QEMU */
+        lcr: u32, /* 0x4c AUX_MU_LCR_REG Mini UART Line Control */
+        /* UNSUPPORTED in QEMU */
+        mcr: u32, /* 0x50 AUX_MU_MCR_REG Mini UART Modem Control */
+        lsr: u32, /* 0x54 AUX_MU_LSR_REG Mini UART Line Status */
+        /* UNSUPPORTED in QEMU */
+        msr: u32, /* 0x58 AUX_MU_MSR_REG Mini UART Modem Status */
+        /* UNSUPPORTED in QEMU */
         scratch: u32, /* 0x5c AUX_MU_SCRATCH Mini UART Scratch */
         cntl: u32,    /* 0x60 AUX_MU_CNTL_REG Mini UART Extra Control */
         stat: u32,    /* 0x64 AUX_MU_STAT_REG Mini UART Extra Status */
-        baud: u32,    /* 0x68 AUX_MU_BAUD_REG Mini UART Baudrate */
+        /* UNSUPPORTED in QEMU */
+        baud: u32, /* 0x68 AUX_MU_BAUD_REG Mini UART Baudrate */
     }
 
     #[derive(PartialEq, Eq, Clone, Copy)]
