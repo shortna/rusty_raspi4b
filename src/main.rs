@@ -5,6 +5,7 @@
 use core::arch::{asm, global_asm};
 use core::panic::PanicInfo;
 
+mod spi;
 mod aux;
 mod gpio;
 mod utils;

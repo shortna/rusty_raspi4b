@@ -37,57 +37,48 @@ impl AUXPeripherals {
     }
 
     pub fn enable_mini_uart(&mut self) {
-        let reg = &mut self.registers.enable as *mut u32;
-        register_volatile_or(reg, BITu32!(0));
+        register_volatile_or(u32_register_mut!(self.registers.enable), BITu32!(0));
     }
 
     /* UNSUPPORTED */
     pub fn enable_spi(&mut self) {
-        let reg = &mut self.registers.enable as *mut u32;
-        register_volatile_or(reg, BITu32!(1));
+        register_volatile_or(u32_register_mut!(self.registers.enable), BITu32!(1));
     }
 
     /* UNSUPPORTED */
     pub fn enable_spi2(&mut self) {
-        let reg = &mut self.registers.enable as *mut u32;
-        register_volatile_or(reg, BITu32!(2));
+        register_volatile_or(u32_register_mut!(self.registers.enable), BITu32!(2));
     }
 
     /* UNSUPPORTED */
     pub fn disable_mini_uart(&mut self) {
-        let reg = &mut self.registers.enable as *mut u32;
-        register_volatile_and(reg, !BITu32!(0));
+        register_volatile_and(u32_register_mut!(self.registers.enable), !BITu32!(0));
     }
 
     /* UNSUPPORTED */
     pub fn disable_spi(&mut self) {
-        let reg = &mut self.registers.enable as *mut u32;
-        register_volatile_and(reg, !BITu32!(1));
+        register_volatile_and(u32_register_mut!(self.registers.enable), !BITu32!(1));
     }
 
     /* UNSUPPORTED */
     pub fn disable_spi2(&mut self) {
-        let reg = &mut self.registers.enable as *mut u32;
-        register_volatile_and(reg, !BITu32!(2));
+        register_volatile_and(u32_register_mut!(self.registers.enable), !BITu32!(2));
     }
 
     pub fn irq_pending_mini_uart(&self) -> bool {
-        let reg = &self.registers.irq as *const u32;
-        let irq = unsafe { read_volatile(reg) };
+        let irq = unsafe { read_volatile(u32_register!(self.registers.irq)) };
         (irq & BITu32!(0)) > 0
     }
 
     /* UNSUPPORTED */
     pub fn irq_pending_spi(&self) -> bool {
-        let reg = &self.registers.irq as *const u32;
-        let irq = unsafe { read_volatile(reg) };
+        let irq = unsafe { read_volatile(u32_register!(self.registers.irq)) };
         (irq & BITu32!(1)) > 0
     }
 
     /* UNSUPPORTED */
     pub fn irq_pending_spi2(&self) -> bool {
-        let reg = &self.registers.irq as *const u32;
-        let irq = unsafe { read_volatile(reg) };
+        let irq = unsafe { read_volatile(u32_register!(self.registers.irq)) };
         (irq & BITu32!(2)) > 0
     }
 }
@@ -142,157 +133,127 @@ pub mod peripherals {
         }
 
         pub fn transmit(&mut self, byte: u32) {
-            let reg = &mut self.io as *mut u32;
             unsafe {
-                write_volatile(reg, byte);
+                write_volatile(u32_register_mut!(self.io), byte);
             }
         }
 
         pub fn receive(&self) -> u32 {
-            let reg = &self.io as *const u32;
-            unsafe { read_volatile(reg) }
+            unsafe { read_volatile(u32_register!(self.io)) }
         }
 
         pub fn enable_receive_interrupt(&mut self) {
-            let reg = &mut self.ier as *mut u32;
-            register_volatile_or(reg, BITu32!(1));
+            register_volatile_or(u32_register_mut!(self.ier), BITu32!(1));
         }
 
         pub fn disable_receive_interrupt(&mut self) {
-            let reg = &mut self.ier as *mut u32;
-            register_volatile_and(reg, !BITu32!(1));
+            register_volatile_and(u32_register_mut!(self.ier), !BITu32!(1));
         }
 
         pub fn enable_transmit_interrupt(&mut self) {
-            let reg = &mut self.ier as *mut u32;
-            register_volatile_or(reg, BITu32!(0));
+            register_volatile_or(u32_register_mut!(self.ier), BITu32!(0));
         }
 
         pub fn disable_transmit_interrupt(&mut self) {
-            let reg = &mut self.ier as *mut u32;
-            register_volatile_and(reg, !BITu32!(0));
+            register_volatile_and(u32_register_mut!(self.ier), !BITu32!(0));
         }
 
         pub fn clear_receive_fifo(&mut self) {
-            let reg = &mut self.iir as *mut u32;
-            register_volatile_or(reg, BITu32!(1));
+            register_volatile_or(u32_register_mut!(self.iir), BITu32!(1));
         }
 
         pub fn clear_transmit_fifo(&mut self) {
-            let reg = &mut self.iir as *mut u32;
-            register_volatile_or(reg, BITu32!(2));
+            register_volatile_or(u32_register_mut!(self.iir), BITu32!(2));
         }
 
         pub fn interrupt_id(&self) -> u32 {
-            let reg = &self.iir as *const u32;
-            let value = unsafe { read_volatile(reg) };
+            let value = unsafe { read_volatile(u32_register!(self.iir)) };
             (value & (BITu32!(1) | BITu32!(2))) >> 1u32
         }
 
         pub fn interrupt_pending(&self) -> bool {
-            unsafe {
-                let reg = &self.iir as *const u32;
-                !((read_volatile(reg) & BITu32!(0)) > 0)
-            }
+            unsafe { !((read_volatile(u32_register!(self.iir)) & BITu32!(0)) > 0) }
         }
 
         pub fn set_8bit_mode(&mut self) {
-            let reg = &mut self.lcr as *mut u32;
-            register_volatile_or(reg, BITu32!(0));
+            register_volatile_or(u32_register_mut!(self.lcr), BITu32!(0));
         }
 
         pub fn set_7bit_mode(&mut self) {
-            let reg = &mut self.lcr as *mut u32;
-            register_volatile_and(reg, !BITu32!(0));
+            register_volatile_and(u32_register_mut!(self.lcr), !BITu32!(0));
         }
 
         pub fn receive_overrun_clear(&mut self) {
-            let reg = &self.lsr as *const u32;
             unsafe {
-                let _ = read_volatile(reg);
+                let _ = read_volatile(u32_register!(self.lsr));
             }
         }
 
         pub fn transmitter_enable(&mut self) {
-            let reg = &mut self.cntl as *mut u32;
-            register_volatile_or(reg, BITu32!(1));
+            register_volatile_or(u32_register_mut!(self.cntl), BITu32!(1));
         }
 
         pub fn receiver_enable(&mut self) {
-            let reg = &mut self.cntl as *mut u32;
-            register_volatile_or(reg, BITu32!(0));
+            register_volatile_or(u32_register_mut!(self.cntl), BITu32!(0));
         }
 
         pub fn transmitter_disable(&mut self) {
-            let reg = &mut self.cntl as *mut u32;
-            register_volatile_and(reg, !BITu32!(1));
+            register_volatile_and(u32_register_mut!(self.cntl), !BITu32!(1));
         }
 
         pub fn receiver_disable(&mut self) {
-            let reg = &mut self.cntl as *mut u32;
-            register_volatile_and(reg, !BITu32!(0));
+            register_volatile_and(u32_register_mut!(self.cntl), !BITu32!(0));
         }
 
         pub fn receiver_symbol_avaliable(&self) -> bool {
-            let reg = &self.stat as *const u32;
-            unsafe { (read_volatile(reg) & BITu32!(0)) > 0 }
+            unsafe { (read_volatile(u32_register!(self.stat)) & BITu32!(0)) > 0 }
         }
 
         pub fn transmitter_space_avaliable(&self) -> bool {
-            let reg = &self.stat as *const u32;
-            unsafe { (read_volatile(reg) & BITu32!(1)) > 0 }
+            unsafe { (read_volatile(u32_register!(self.stat)) & BITu32!(1)) > 0 }
         }
 
         pub fn receiver_idle(&self) -> bool {
-            let reg = &self.stat as *const u32;
-            unsafe { (read_volatile(reg) & BITu32!(2)) > 0 }
+            unsafe { (read_volatile(u32_register!(self.stat)) & BITu32!(2)) > 0 }
         }
 
         pub fn tranmitter_idle(&self) -> bool {
-            let reg = &self.stat as *const u32;
-            unsafe { (read_volatile(reg) & BITu32!(3)) > 0 }
+            unsafe { (read_volatile(u32_register!(self.stat)) & BITu32!(3)) > 0 }
         }
 
         pub fn receive_overrun(&self) -> bool {
-            let reg = &self.stat as *const u32;
-            unsafe { (read_volatile(reg) & BITu32!(4)) > 0 }
+            unsafe { (read_volatile(u32_register!(self.stat)) & BITu32!(4)) > 0 }
         }
 
         pub fn transmit_fifo_empty(&self) -> bool {
-            let reg = &self.stat as *const u32;
-            unsafe { (read_volatile(reg) & BITu32!(8)) > 0 }
+            unsafe { (read_volatile(u32_register!(self.stat)) & BITu32!(8)) > 0 }
         }
 
         pub fn transmitter_done(&self) -> bool {
-            let reg = &self.stat as *const u32;
-            unsafe { (read_volatile(reg) & BITu32!(9)) > 0 }
+            unsafe { (read_volatile(u32_register!(self.stat)) & BITu32!(9)) > 0 }
         }
 
         pub fn receive_fifo_level(&self) -> u32 {
-            let reg = &self.stat as *const u32;
-            unsafe { (read_volatile(reg) >> 16u32) & 0x7 }
+            unsafe { (read_volatile(u32_register!(self.stat)) >> 16u32) & 0x7 }
         }
 
         pub fn transmit_fifo_level(&self) -> u32 {
-            let reg = &self.stat as *const u32;
-            unsafe { (read_volatile(reg) >> 24u32) & 0x7 }
+            unsafe { (read_volatile(u32_register!(self.stat)) >> 24u32) & 0x7 }
         }
 
         // well, that's a fun one
         // https://github.com/qemu/qemu/blob/d9a4282c4b690e45d25c2b933f318bb41eeb271d/hw/char/bcm2835_aux.c#L147
         pub fn set_baudrate(&mut self, baudrate: BaudRate) {
-            let reg = &mut self.baud as *mut u32;
             const UART_CLOCK: u32 = 250_000_000;
             let baudrate_reg: u32 = (UART_CLOCK / (8 * baudrate as u32)) - 1;
             unsafe {
-                write_volatile(reg, baudrate_reg);
+                write_volatile(u32_register_mut!(self.baud), baudrate_reg);
             }
         }
 
         pub fn get_baudrate(&self) -> u32 {
-            let reg = &self.baud as *const u32;
             const UART_CLOCK: u32 = 250_000_000;
-            unsafe { UART_CLOCK / (8 * (read_volatile(reg) + 1)) }
+            unsafe { UART_CLOCK / (8 * (read_volatile(u32_register!(self.baud)) + 1)) }
         }
     }
 }
