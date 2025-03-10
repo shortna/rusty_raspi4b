@@ -1,6 +1,7 @@
 use crate::utils::bits::*;
 use core::ptr::read_volatile;
 
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum GPIOPin {
     PIN0,
     PIN1,
@@ -200,11 +201,13 @@ struct GPIORegisters {
     gpio_pup_pdn_cntrl_reg3: u32, /* 0xf0 GPIO_PUP_PDN_CNTRL_REG3 GPIO Pull-up / Pull-down Register 3 */
 }
 
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum GPIOPinLevel {
     High,
     Low,
 }
 
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub enum GPIOFunction {
     INPUT = 0,
     OUTPUT = 1,

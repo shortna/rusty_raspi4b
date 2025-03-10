@@ -13,9 +13,7 @@ struct AUXRegisters {
 impl AUXRegisters {
     const BASE: usize = 0xfe215000;
     pub const fn new() -> &'static mut AUXRegisters {
-        unsafe {
-            &mut *(Self::BASE as *mut AUXRegisters)
-        }
+        unsafe { &mut *(Self::BASE as *mut AUXRegisters) }
     }
 }
 
@@ -106,7 +104,9 @@ pub mod peripherals {
         baud: u32,    /* 0x68 AUX_MU_BAUD_REG Mini UART Baudrate */
     }
 
+    #[derive(PartialEq, Eq, Clone, Copy)]
     pub enum BaudRate {
+        Baud476 = 476,
         Baud1200 = 1200,
         Baud2400 = 2400,
         Baud4800 = 4800,
@@ -135,9 +135,7 @@ pub mod peripherals {
 
         pub fn receive(&self) -> u32 {
             let reg = &self.io as *const u32;
-            unsafe {
-                read_volatile(reg)
-            }
+            unsafe { read_volatile(reg) }
         }
 
         pub fn enable_receive_interrupt(&mut self) {
@@ -222,74 +220,64 @@ pub mod peripherals {
 
         pub fn receiver_symbol_avaliable(&self) -> bool {
             let reg = &self.stat as *const u32;
-            unsafe {
-                (read_volatile(reg) & BITu32!(0)) > 0
-            }
+            unsafe { (read_volatile(reg) & BITu32!(0)) > 0 }
         }
 
         pub fn transmitter_space_avaliable(&self) -> bool {
             let reg = &self.stat as *const u32;
-            unsafe {
-                (read_volatile(reg) & BITu32!(1)) > 0
-            }
+            unsafe { (read_volatile(reg) & BITu32!(1)) > 0 }
         }
 
         pub fn receiver_idle(&self) -> bool {
             let reg = &self.stat as *const u32;
-            unsafe {
-                (read_volatile(reg) & BITu32!(2)) > 0
-            }
+            unsafe { (read_volatile(reg) & BITu32!(2)) > 0 }
         }
 
         pub fn tranmitter_idle(&self) -> bool {
             let reg = &self.stat as *const u32;
-            unsafe {
-                (read_volatile(reg) & BITu32!(3)) > 0
-            }
+            unsafe { (read_volatile(reg) & BITu32!(3)) > 0 }
         }
 
         pub fn receive_overrun(&self) -> bool {
             let reg = &self.stat as *const u32;
-            unsafe {
-                (read_volatile(reg) & BITu32!(4)) > 0
-            }
+            unsafe { (read_volatile(reg) & BITu32!(4)) > 0 }
         }
 
         pub fn transmit_fifo_empty(&self) -> bool {
             let reg = &self.stat as *const u32;
-            unsafe {
-                (read_volatile(reg) & BITu32!(8)) > 0
-            }
+            unsafe { (read_volatile(reg) & BITu32!(8)) > 0 }
         }
 
         pub fn transmitter_done(&self) -> bool {
             let reg = &self.stat as *const u32;
-            unsafe {
-                (read_volatile(reg) & BITu32!(9)) > 0
-            }
+            unsafe { (read_volatile(reg) & BITu32!(9)) > 0 }
         }
 
         pub fn receive_fifo_level(&self) -> u32 {
             let reg = &self.stat as *const u32;
-            unsafe {
-                (read_volatile(reg) >> 16u32) & 0x7
-            }
+            unsafe { (read_volatile(reg) >> 16u32) & 0x7 }
         }
 
         pub fn transmit_fifo_level(&self) -> u32 {
             let reg = &self.stat as *const u32;
-            unsafe {
-                (read_volatile(reg) >> 24u32) & 0x7
-            }
+            unsafe { (read_volatile(reg) >> 24u32) & 0x7 }
         }
 
+        // well, that's a fun one
+        // https://github.com/qemu/qemu/blob/d9a4282c4b690e45d25c2b933f318bb41eeb271d/hw/char/bcm2835_aux.c#L147
         pub fn set_baudrate(&mut self, baudrate: BaudRate) {
             let reg = &mut self.baud as *mut u32;
             const UART_CLOCK: u32 = 250_000_000;
-            let divisor: u32 = UART_CLOCK / (8 * (baudrate as u32 + 1));
+            let baudrate_reg: u32 = (UART_CLOCK / (8 * baudrate as u32)) - 1;
             unsafe {
-                write_volatile(reg, divisor);
+                write_volatile(reg, baudrate_reg);
             }
+        }
+
+        pub fn get_baudrate(&self) -> u32 {
+            let reg = &self.baud as *const u32;
+            const UART_CLOCK: u32 = 250_000_000;
+            unsafe { UART_CLOCK / (8 * (read_volatile(reg) + 1)) }
         }
     }
 }

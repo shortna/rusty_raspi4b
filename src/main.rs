@@ -29,8 +29,6 @@ fn init_mini_uart(gpio: &mut GPIO, uart: &mut MiniUart) {
     memory_write_barier();
     gpio.pin_function_set(GPIOPin::PIN14, GPIOFunction::ALT5);
     gpio.pin_function_set(GPIOPin::PIN15, GPIOFunction::ALT5);
-    gpio.pin_set(GPIOPin::PIN14);
-    gpio.pin_set(GPIOPin::PIN15);
 
     memory_write_barier();
     uart.receiver_disable();
@@ -46,7 +44,8 @@ fn init_mini_uart(gpio: &mut GPIO, uart: &mut MiniUart) {
     uart.clear_transmit_fifo();
     uart.clear_receive_fifo();
 
-    uart.set_baudrate(BaudRate::Baud115200);
+    // unsupported in qemu
+    // uart.set_baudrate(BaudRate::Baud476);
     uart.set_8bit_mode();
 
     uart.transmitter_enable();
@@ -81,6 +80,9 @@ fn main() {
         print(mini_uart, &str[0..i]);
         print(mini_uart, b"\n");
     }
+
+    let _b = mini_uart.get_baudrate();
+    memory_read_barier();
 
     loop {
         while !mini_uart.receiver_symbol_avaliable() {}
