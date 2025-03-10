@@ -11,6 +11,7 @@ mod gpio;
 mod utils;
 use crate::aux::AUXPeripherals;
 use crate::aux::peripherals::*;
+use crate::spi::*;
 
 use crate::gpio::*;
 use crate::utils::bariers::*;
@@ -81,9 +82,6 @@ fn main() {
         print(mini_uart, &str[0..i]);
         print(mini_uart, b"\n");
     }
-
-    let _b = mini_uart.get_baudrate();
-    memory_read_barier();
 
     loop {
         while !mini_uart.receiver_symbol_avaliable() {}

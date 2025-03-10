@@ -88,9 +88,6 @@ pub mod peripherals {
     use core::ptr::{read_volatile, write_volatile};
 
     #[repr(C)]
-    pub struct SPI {}
-
-    #[repr(C)]
     pub struct MiniUart {
         io: u32,  /* 0x40 AUX_MU_IO_REG Mini UART I/O Data */
         ier: u32, /* 0x44 AUX_MU_IER_REG Mini UART Interrupt Enable */
