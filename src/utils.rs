@@ -22,7 +22,22 @@ pub mod bits {
             (1u32 << $b)
         };
     }
+
+    macro_rules! u32_register {
+        ($reg: expr) => {
+            &$reg as *const u32
+        };
+    }
+
+    macro_rules! u32_register_mut {
+        ($reg: expr) => {
+            &mut $reg as *mut u32
+        };
+    }
+
     pub(crate) use BITu32;
+    pub(crate) use u32_register;
+    pub(crate) use u32_register_mut;
 }
 
 pub mod bariers {
